@@ -1,6 +1,6 @@
 <?php
 
-namespace GoogleReviews;
+namespace GoogleReview;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
