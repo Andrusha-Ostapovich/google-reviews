@@ -1,0 +1,26 @@
+{
+    "name": "ostapovich/google-reviews",
+    "description": "A library for fetching Google reviews",
+    "type": "library",
+    "require": {
+        "symfony/dom-crawler": "^7.1",
+        "php": "^8.0",
+        "guzzlehttp/guzzle": "^7.4"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11.2"
+    },
+    "autoload": {
+        "psr-4": {
+            "Ostapovich\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Andrii",
+            "email": "andrii.ostapovich@gmail.com"
+        }
+    ],
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
