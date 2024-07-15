@@ -94,5 +94,5 @@ $this->getReviewsCount($this->getCrawlerObj($firstUrl));
 - `getReviewsRatings(Crawler $crawler): array|\Exception`
   - Extracts the review ratings from the HTML content.
 
-- `getProfilesUrls(Crawler $crawler): array`
-  - Extracts the profile URLs from the HTML content.
+- `getProfilesImg(Crawler $crawler): array`
+  - Extracts the profile Img's from the HTML content.

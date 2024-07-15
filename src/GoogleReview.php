@@ -101,23 +101,16 @@ class GoogleReview
      * @param Crawler $crawler The Crawler object containing the HTML content.
      * @return float The rating value as a float, with any commas replaced by dots.
      */
-    public function getRating(Crawler $crawler)
+    public function getRating(Crawler $crawler): float|null|\Exception
     {
         return floatval(str_replace(',', '.', $crawler->filter('span.Aq14fc')->first()->text()));
     }
     /**
-     * Retrieves an array of reviews from the given Crawler object. Each review is represented as an associative array
-     * with the following keys: 'id', 'name', 'profile_url', 'rating', 'text', 'translation_text', 'reply', and
-     * 'translation_reply'. The values of these keys are obtained from the Crawler object using the respective helper
-     * methods: getReviewsNames(), getReviewsTexts(), getReviewsReply(), getReviewsRatings(), getProfilesUrls(), and
-     * getReviewsIds(). If any of the helper methods returns null or an Exception object, the corresponding key in the
-     * review array will also be set to null or the Exception object. If the number of names, texts, replies, ratings,
-     * profile URLs, or IDs is not equal, the review array will be truncated to the length of the shortest array.
+     * Retrieves all the reviews information from the given Crawler object.
      *
-     * @param Crawler $crawler The Crawler object containing the HTML content.
-     * @return array An array of reviews, each review represented as an associative array with the keys 'id', 'name',
-     *               'profile_url', 'rating', 'text', 'translation_text', 'reply', and 'translation_reply'. If an error
-     *               occurs, returns an Exception object.
+     * @param Crawler $crawler The Crawler object containing the reviews data.
+     * @throws \Exception If an error occurs during the retrieval process.
+     * @return array An array of reviews with details like id, name, profile URL, rating, text, translation text, reply, translation reply, and profile image.
      */
     public function getReviews(Crawler $crawler): array|\Exception
     {
@@ -126,20 +119,21 @@ class GoogleReview
         $texts = $this->getReviewsTexts($crawler);
         $replys = $this->getReviewsReply($crawler);
         $ratings = $this->getReviewsRatings($crawler);
-        $profile_urls = $this->getProfilesUrls($crawler);
+        $profileUrls = $this->getProfilesUrls($crawler);
         $ids = $this->getReviewsIds($crawler);
-
+        $profileImgs = $this->getProfileImg($crawler);
         for ($i = 0; $i < count($names); $i++) {
 
             $reviews[] = [
                 'id' => $ids[$i] ?? null,
                 'name' => $names[$i] ?? null,
-                'profile_url' => $profile_urls[$i] ?? null,
+                'profile_url' => $profileUrls[$i] ?? null,
                 'rating' => $ratings[$i] ?? null,
                 'text' => $texts[$i * 2 + 1] ?? null,
                 'translation_text' => $texts[$i * 2] ?? null,
                 'reply' => $replys[$i * 2 + 1] ?? null,
                 'translation_reply' => $replys[$i * 2] ?? null,
+                'profile_img' => $profileImgs[$i] ?? null
             ];
         }
 
@@ -168,13 +162,16 @@ class GoogleReview
      * Retrieves the total number of reviews from the provided Crawler object.
      *
      * @param Crawler $crawler The Crawler object to extract the reviews count from.
-     * @return int The total number of reviews.
+     * @return int|null The total number of reviews.
      * @throws \Exception If an error occurs during the extraction process.
      */
     public function getReviewsCount(Crawler $crawler): int|null|\Exception
     {
-        $textElement = $crawler->filter('.z5jxId')->first()->text();
-        $upd = preg_replace('/\s+/u', '', $textElement);
+        $textElement = $crawler->filter('.z5jxId')->first();
+        if ($textElement === null) {
+            return null;
+        }
+        $upd = preg_replace('/\s+/u', '', $textElement->text());
         preg_match('/([\d\s]+)/u', $upd, $matches);
         return $matches[0];
     }
@@ -201,15 +198,20 @@ class GoogleReview
      * Retrieves the replies from the provided Crawler object.
      *
      * @param Crawler $crawler The Crawler object to extract the replies from.
-     * @return array The array of replies.
-     * @throws \Exception If an error occurs during the extraction process.
+     * @return array|\Exception The array of replies, or an exception if an error occurs during the extraction process.
      */
     public function getReviewsReply(Crawler $crawler): array|\Exception
     {
         $replys = [];
-
-        $crawler->filter('.d6SCIc')->each(function (Crawler $node) use (&$replys) {
-            $replys[] = $node->text();
+        $crawler->filter('div[jscontroller="fIQYlf"]')->each(function (Crawler $node) use (&$replys) {
+            if ($node->filter('[jscontroller="MZnM8e"]')->count() > 4) {
+                $node->filter('.d6SCIc')->each(function (Crawler $childNode) use (&$replys) {
+                    $replys[] = $childNode->text();
+                });
+            } else {
+                $replys[] = null;
+                $replys[] = null;
+            }
         });
         return $replys;
     }
@@ -271,6 +273,21 @@ class GoogleReview
             }
         });
 
+        return $urls;
+    }
+    /**
+     * Retrieves the URLs of profile images from the given Crawler object.
+     *
+     * @param Crawler $crawler The Crawler object to extract profile image URLs from.
+     * @return array The array of profile image URLs.
+     */
+    public function getProfileImg(Crawler $crawler): array
+    {
+        $urls = [];
+
+        $crawler->filter('img.lDY1rd')->each(function (Crawler $node) use (&$urls) {
+            $urls[] = $node->attr('src');
+        });
         return $urls;
     }
 }

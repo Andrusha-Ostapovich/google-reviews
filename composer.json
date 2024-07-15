@@ -21,6 +21,7 @@
             "email": "andrii.ostapovich@gmail.com"
         }
     ],
+    "license": "MIT",
     "minimum-stability": "stable",
     "prefer-stable": true
 }
